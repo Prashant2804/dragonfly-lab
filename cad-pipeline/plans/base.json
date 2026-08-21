@@ -1,0 +1,10 @@
+{"bands":[
+ {"from":-10,"to":60,"name":"tripod_feet","material":"foot"},
+ {"from":60,"to":950,"name":"tripod_legs","material":"tripod"},
+ {"from":950,"to":1250,"name":"battery_module","material":"battery"},
+ {"from":1250,"to":1266,"name":"gateway","material":"gateway"},
+ {"from":1266,"to":1400,"name":"antenna","material":"antenna"}
+],
+"tubes":[
+ {"name":"mast","from":900,"to":1256,"r0":15,"r1":15,"material":"pole"}
+]}

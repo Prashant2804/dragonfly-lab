@@ -1,0 +1,13 @@
+{"bands":[
+ {"from":860,"to":1045,"minRadial":50,"name":"phone_mount","material":"phone"},
+ {"from":300,"to":1500,"name":"pole_collars","material":"collar"},
+ {"from":1500,"to":1782,"name":"battery_module","material":"battery"},
+ {"from":1782,"to":1800,"name":"gateway","material":"gateway"},
+ {"from":1800,"to":2000,"name":"antenna","material":"antenna"}
+],
+"tubes":[
+ {"name":"survey_tip","from":0,"to":70,"r0":1.5,"r1":16,"material":"tip"},
+ {"name":"pole_lower","from":66,"to":640,"r0":17,"r1":17,"material":"pole"},
+ {"name":"pole_mid","from":600,"to":1140,"r0":15,"r1":15,"material":"pole"},
+ {"name":"pole_upper","from":1100,"to":1790,"r0":13,"r1":13,"material":"pole"}
+]}

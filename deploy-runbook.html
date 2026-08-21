@@ -1,0 +1,502 @@
+<title>Aerom Launch Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /* ---- tokens: light is the default, dark redefines only these ---- */
+  :root {
+    --paper:  #F3F2F0;
+    --card:   #FFFFFF;
+    --sunk:   #EBE9E6;
+    --ink:    #14120F;
+    --ink-2:  #55514B;
+    --ink-3:  #837D75;
+    --rule:   #DEDBD6;
+    --rule-2: #C9C5BE;
+    --accent: #E65C20;
+    --accent-ink: #FFFFFF;
+    --go:     #1B7A45;
+    --go-bg:  #E4F0E9;
+    --hold:   #9A5B08;
+    --hold-bg:#F6EADA;
+    --shadow: 0 1px 2px rgba(20,18,15,.05), 0 8px 24px -16px rgba(20,18,15,.25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:  #0E0F11;
+      --card:   #17191C;
+      --sunk:   #121417;
+      --ink:    #ECEEEF;
+      --ink-2:  #A3AAB0;
+      --ink-3:  #7B8288;
+      --rule:   #242830;
+      --rule-2: #333941;
+      --accent: #F5733B;
+      --accent-ink: #14120F;
+      --go:     #4FBF83;
+      --go-bg:  #12291E;
+      --hold:   #E0A857;
+      --hold-bg:#2A2114;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:  #0E0F11;
+    --card:   #17191C;
+    --sunk:   #121417;
+    --ink:    #ECEEEF;
+    --ink-2:  #A3AAB0;
+    --ink-3:  #7B8288;
+    --rule:   #242830;
+    --rule-2: #333941;
+    --accent: #F5733B;
+    --accent-ink: #14120F;
+    --go:     #4FBF83;
+    --go-bg:  #12291E;
+    --hold:   #E0A857;
+    --hold-bg:#2A2114;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: 860px; margin: 0 auto; padding: 0 20px 96px; }
+
+  h1, h2, h3 { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  /* ---- masthead ---- */
+  .top { padding: 56px 0 30px; border-bottom: 1px solid var(--rule); }
+  .kicker {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+  }
+  h1 { font-size: clamp(30px, 6vw, 46px); font-weight: 700; letter-spacing: -.025em; line-height: 1.06; }
+  .sub { color: var(--ink-2); margin-top: 14px; max-width: 60ch; font-size: 17px; }
+
+  .meter {
+    display: flex; align-items: center; gap: 14px; margin-top: 28px;
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-2);
+  }
+  .meter__track { flex: 1; height: 4px; background: var(--rule); border-radius: 99px; overflow: hidden; }
+  .meter__fill { height: 100%; width: 0; background: var(--accent); transition: width .3s ease; }
+
+  /* ---- blockers ---- */
+  .blockers {
+    margin: 34px 0 0; padding: 24px 26px; border-radius: 10px;
+    background: var(--hold-bg); border: 1px solid var(--rule-2);
+  }
+  .blockers h2 { font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: var(--hold); }
+  .blockers p { color: var(--ink-2); font-size: 15px; margin-top: 8px; }
+  .blockers ul { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .blockers li {
+    display: grid; grid-template-columns: 18px 1fr; gap: 12px; align-items: start;
+    font-size: 15px; color: var(--ink);
+  }
+  .blockers li::before { content: "→"; color: var(--hold); font-family: "IBM Plex Mono", monospace; }
+
+  /* ---- phases ---- */
+  .phase { margin-top: 54px; }
+  .phase__head { display: flex; align-items: baseline; gap: 14px; padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
+  .phase__n {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .phase__head h2 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+  .phase__note { color: var(--ink-2); font-size: 15px; margin-top: 14px; }
+
+  /* ---- steps ---- */
+  .step {
+    display: grid; grid-template-columns: 46px 1fr; gap: 18px;
+    padding: 26px 0; border-bottom: 1px solid var(--rule);
+  }
+  .step__rail { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .step__n {
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 500;
+    color: var(--ink-3); padding-top: 2px;
+  }
+  .tick {
+    width: 22px; height: 22px; border: 1.5px solid var(--rule-2); border-radius: 6px;
+    background: var(--card); cursor: pointer; display: grid; place-items: center; padding: 0;
+    transition: background .15s, border-color .15s;
+  }
+  .tick svg { width: 13px; height: 13px; opacity: 0; transition: opacity .15s; }
+  .tick[aria-pressed="true"] { background: var(--go); border-color: var(--go); }
+  .tick[aria-pressed="true"] svg { opacity: 1; }
+  .tick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .step h3 { font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .step__body { color: var(--ink-2); font-size: 15px; margin-top: 8px; }
+  .step__body + .step__body { margin-top: 10px; }
+  .step.is-done h3, .step.is-done .step__body { opacity: .5; }
+  .step.is-done h3 { text-decoration: line-through; text-decoration-color: var(--ink-3); }
+
+  /* ---- code ---- */
+  .cmd { position: relative; margin-top: 14px; }
+  .cmd pre {
+    margin: 0; padding: 15px 52px 15px 16px; background: var(--sunk);
+    border: 1px solid var(--rule); border-radius: 8px;
+    font-family: "IBM Plex Mono", monospace; font-size: 13.5px; line-height: 1.75;
+    color: var(--ink); overflow-x: auto;
+  }
+  .cmd .c { color: var(--ink-3); }
+  .copy {
+    position: absolute; top: 9px; right: 9px; border: 1px solid var(--rule-2);
+    background: var(--card); color: var(--ink-2); border-radius: 6px; cursor: pointer;
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; padding: 5px 9px;
+  }
+  .copy:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* ---- env var table ---- */
+  .tablewrap { margin-top: 16px; overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 14px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th { background: var(--sunk); font-weight: 600; font-size: 13px; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.k { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; white-space: nowrap; color: var(--ink); }
+  td.d { color: var(--ink-2); }
+
+  /* ---- callout ---- */
+  .note {
+    margin-top: 16px; padding: 15px 18px; border-radius: 8px;
+    background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+    font-size: 14.5px; color: var(--ink-2);
+  }
+  .note strong { color: var(--ink); font-weight: 600; }
+
+  .done-note {
+    margin-top: 44px; padding: 26px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--rule); box-shadow: var(--shadow);
+  }
+  .done-note h2 { font-size: 19px; font-weight: 700; }
+  .done-note p { color: var(--ink-2); font-size: 15px; margin-top: 10px; }
+
+  @media (max-width: 560px) {
+    .step { grid-template-columns: 34px 1fr; gap: 12px; }
+    .step__n { display: none; }
+    .shell { padding-inline: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="shell">
+
+  <header class="top">
+    <p class="kicker">Dragonfly · Aerom</p>
+    <h1>Taking dragonflylab.in live</h1>
+    <p class="sub">Eighteen steps, in order, from the code on your machine to a site Google can find. Tick them off as you go — your progress is saved in this browser.</p>
+    <div class="meter">
+      <span class="mono" id="count">0 / 18</span>
+      <span class="meter__track"><span class="meter__fill" id="fill"></span></span>
+    </div>
+  </header>
+
+  <section class="blockers">
+    <h2>Four things to settle before the site is public</h2>
+    <p>None of these block a preview deployment — do the whole runbook today. They block the moment you send the link to a customer.</p>
+    <ul>
+      <li><strong>A phone number.</strong> For Indian B2B capital equipment it is the first trust signal checked. Goes in <code class="mono">src/data/site.mjs</code>.</li>
+      <li><strong>An email on the domain.</strong> A gmail.com address selling a lakh-plus instrument undercuts everything else on the page.</li>
+      <li><strong>Warranty, lead time and service turnaround.</strong> The values in <code class="mono">src/data/commerce.mjs</code> are placeholders, and they are promises to customers.</li>
+      <li><strong>Legal entity name and address.</strong> Four <code class="mono">TODO</code>s in <code class="mono">site.mjs</code> → <code class="mono">legal</code>. A privacy policy from a vague entity is a weak privacy policy.</li>
+    </ul>
+  </section>
+
+  <!-- ============ PHASE 1 ============ -->
+  <section class="phase">
+    <div class="phase__head"><span class="phase__n">Phase 1</span><h2>Get the code onto GitHub</h2></div>
+    <p class="phase__note">Vercel deploys from a Git repository and redeploys on every push. The repo already has commits on a <code class="mono">main</code> branch, so this is just adding a remote.</p>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 1 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">01</span></div>
+      <div>
+        <h3>Create an empty private repo</h3>
+        <p class="step__body">On <a href="https://github.com/new">github.com/new</a>, name it <code class="mono">dragonflylab</code>. Do <em>not</em> add a README, .gitignore or licence — the project already has them, and an initialised repo makes the first push conflict.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 2 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">02</span></div>
+      <div>
+        <h3>Push it</h3>
+        <p class="step__body">Unzip the project, open a terminal inside the <code class="mono">dragonflylab</code> folder, and run this with your own username.</p>
+        <div class="cmd">
+          <button class="copy" data-copy>copy</button>
+          <pre><span class="c"># from inside the dragonflylab folder</span>
+git remote add origin https://github.com/Prashant2804/dragonflylab.git
+git push -u origin main</pre>
+        </div>
+        <p class="step__body">GitHub will ask for a Personal Access Token, not your password — create one at <span class="mono">Settings → Developer settings → Personal access tokens</span> with <span class="mono">repo</span> scope.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 2 ============ -->
+  <section class="phase">
+    <div class="phase__head"><span class="phase__n">Phase 2</span><h2>Deploy on Vercel</h2></div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 3 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">03</span></div>
+      <div>
+        <h3>Import the repository</h3>
+        <p class="step__body">At <a href="https://vercel.com/new">vercel.com/new</a>, sign in with GitHub and import <code class="mono">dragonflylab</code>.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 4 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">04</span></div>
+      <div>
+        <h3>Set the framework preset to “Other”, then change nothing else</h3>
+        <p class="step__body">Build command and output directory are already declared in <code class="mono">vercel.json</code> (<code class="mono">npm run build</code> → <code class="mono">public</code>). Overriding them in the dashboard is the most common way this goes wrong.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 5 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">05</span></div>
+      <div>
+        <h3>Deploy, and open the preview URL</h3>
+        <p class="step__body">About a minute. You get a <code class="mono">dragonflylab-….vercel.app</code> address. Click through every page. The form will fail at this point — that is expected, nothing is connected yet.</p>
+        <div class="note"><strong>Vercel's free Hobby plan is for non-commercial personal use only.</strong> A company website is commercial, so this needs the Pro plan at $20 per user per month. There is a free Pro trial to get started. If you would rather not pay yet, Cloudflare Pages permits commercial use on its free tier — but the lead API would need rewriting for its runtime, so it is a real decision, not a toggle.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 3 ============ -->
+  <section class="phase">
+    <div class="phase__head"><span class="phase__n">Phase 3</span><h2>Connect the lead pipeline</h2></div>
+    <p class="phase__note">Three destinations, all optional individually — but at least one must work, or the form shows visitors an error instead of silently swallowing their enquiry. That is deliberate.</p>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 6 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">06</span></div>
+      <div>
+        <h3>Create the leads spreadsheet</h3>
+        <p class="step__body">New Google Sheet, first tab named <code class="mono">Leads</code>, with these headers in row 1:</p>
+        <div class="cmd">
+          <button class="copy" data-copy>copy</button>
+          <pre>Timestamp (IST) | Intent | Use case | Name | Organisation | Email |
+Phone | City / Country | Message | Marketing consent | Source page |
+Referrer | UTM</pre>
+        </div>
+        <p class="step__body">Only email people whose <strong>Marketing consent</strong> cell says <code class="mono">yes</code>. Replying to an enquiry needs no opt-in; anything else does.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 7 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">07</span></div>
+      <div>
+        <h3>Make a Google service account</h3>
+        <p class="step__body">At <a href="https://console.cloud.google.com">console.cloud.google.com</a>: create a project → <span class="mono">APIs &amp; Services</span> → enable <strong>Google Sheets API</strong> → <span class="mono">Credentials → Create credentials → Service account</span> → open it → <span class="mono">Keys → Add key → JSON</span>. From the downloaded file you need <code class="mono">client_email</code> and <code class="mono">private_key</code>.</p>
+        <div class="note"><strong>Then share the Sheet with that <code class="mono">client_email</code> address, as Editor.</strong> This is the step everyone forgets, and without it every write returns 403. Share only this sheet with it — that account can reach anything you share with it.</div>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 8 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">08</span></div>
+      <div>
+        <h3>Get the email and Apollo keys</h3>
+        <p class="step__body"><strong>Resend</strong> — sign up at resend.com, verify <code class="mono">dragonflylab.in</code> as a sending domain, create an API key. This is what alerts you within seconds of a lead arriving, which is most of the value.</p>
+        <p class="step__body"><strong>Apollo</strong> — <span class="mono">Settings → Integrations → API</span>. Leads land as contacts so a follow-up cannot get lost.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 9 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">09</span></div>
+      <div>
+        <h3>Add the variables, then redeploy</h3>
+        <p class="step__body">Vercel → <span class="mono">Settings → Environment Variables</span>. Tick <strong>both</strong> Production and Preview for each.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Variable</th><th>What it is</th></tr></thead>
+          <tbody>
+            <tr><td class="k">GOOGLE_SERVICE_ACCOUNT_EMAIL</td><td class="d">The <code class="mono">client_email</code> from the JSON key</td></tr>
+            <tr><td class="k">GOOGLE_PRIVATE_KEY</td><td class="d">The whole <code class="mono">-----BEGIN PRIVATE KEY-----</code> block, newlines and all</td></tr>
+            <tr><td class="k">GOOGLE_SHEET_ID</td><td class="d">The long id in the Sheet URL, between <code class="mono">/d/</code> and <code class="mono">/edit</code></td></tr>
+            <tr><td class="k">GOOGLE_SHEET_TAB</td><td class="d">Optional. Defaults to <code class="mono">Leads</code></td></tr>
+            <tr><td class="k">APOLLO_API_KEY</td><td class="d">From Apollo</td></tr>
+            <tr><td class="k">RESEND_API_KEY</td><td class="d">From Resend</td></tr>
+            <tr><td class="k">NOTIFY_EMAIL</td><td class="d">Where new-lead alerts go — your phone's inbox</td></tr>
+            <tr><td class="k">NOTIFY_FROM</td><td class="d">A verified sender, e.g. <code class="mono">leads@dragonflylab.in</code></td></tr>
+          </tbody>
+        </table></div>
+        <p class="step__body">Environment variables only take effect on a new build: <span class="mono">Deployments → ⋯ → Redeploy</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 4 ============ -->
+  <section class="phase">
+    <div class="phase__head"><span class="phase__n">Phase 4</span><h2>Point the domain</h2></div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 10 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">10</span></div>
+      <div>
+        <h3>Add both hostnames in Vercel</h3>
+        <p class="step__body"><span class="mono">Settings → Domains</span> → add <code class="mono">dragonflylab.in</code> and <code class="mono">www.dragonflylab.in</code>. Set the bare domain as primary so <code class="mono">www</code> redirects to it — every canonical URL in the site is written without <code class="mono">www</code>, and disagreeing with that splits your ranking signals across two addresses.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 11 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">11</span></div>
+      <div>
+        <h3>Change the DNS at your registrar</h3>
+        <p class="step__body">Wherever you bought <code class="mono">dragonflylab.in</code>. Vercel shows the exact values — the two usual routes are:</p>
+        <div class="cmd">
+          <button class="copy" data-copy>copy</button>
+          <pre><span class="c"># simplest — hand DNS to Vercel</span>
+nameservers:  ns1.vercel-dns.com
+              ns2.vercel-dns.com
+
+<span class="c"># or keep your existing DNS provider</span>
+A      @      76.76.21.21
+CNAME  www    cname.vercel-dns.com</pre>
+        </div>
+        <p class="step__body">Confirm the current values in Vercel's dashboard rather than trusting this from memory — they do change.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 12 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">12</span></div>
+      <div>
+        <h3>Wait for propagation, then check HTTPS</h3>
+        <p class="step__body">Usually minutes, occasionally a few hours. Vercel issues the TLS certificate automatically once DNS resolves. The site sends a two-year HSTS header with <code class="mono">preload</code>, so once it is live over HTTPS, browsers will refuse plain HTTP for this domain — make sure you are happy with the domain before this sets.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 5 ============ -->
+  <section class="phase">
+    <div class="phase__head"><span class="phase__n">Phase 5</span><h2>Prove it actually works</h2></div>
+    <p class="phase__note">A form that looks fine and silently drops enquiries is worse than no form. Test it on the live domain, not the preview.</p>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 13 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">13</span></div>
+      <div>
+        <h3>Submit a real enquiry to yourself</h3>
+        <p class="step__body">Then confirm all three: a row appears in the Sheet, a contact appears in Apollo, and the alert email arrives. If the email is the only one missing, you still have the lead — that is why there are three.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 14 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">14</span></div>
+      <div>
+        <h3>Send yourself the link on WhatsApp</h3>
+        <p class="step__body">Check the preview card renders with the product image and headline. Survey WhatsApp groups are how this spreads in your market, so the card matters more here than the homepage hero does.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 15 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">15</span></div>
+      <div>
+        <h3>Open it on a real mid-range Android on mobile data</h3>
+        <p class="step__body">Not the desktop responsive simulator. Most of your visitors arrive this way, and it is the only honest test of whether the 3D and the images are as light as they measure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 6 ============ -->
+  <section class="phase">
+    <div class="phase__head"><span class="phase__n">Phase 6</span><h2>Get found</h2></div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 16 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">16</span></div>
+      <div>
+        <h3>Verify Google Search Console and submit the sitemap</h3>
+        <p class="step__body">At <a href="https://search.google.com/search-console">search.google.com/search-console</a>, add <code class="mono">dragonflylab.in</code> as a <em>Domain</em> property and verify with the TXT record it gives you. Then submit:</p>
+        <div class="cmd">
+          <button class="copy" data-copy>copy</button>
+          <pre>https://dragonflylab.in/sitemap.xml</pre>
+        </div>
+        <p class="step__body">Search Console is also where your free keyword data comes from — real queries people used to reach you, which beats guessing.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 17 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">17</span></div>
+      <div>
+        <h3>Add Bing Webmaster Tools</h3>
+        <p class="step__body">It imports straight from Search Console in two clicks. Small traffic share, zero extra effort, and it also feeds several AI search products.</p>
+      </div>
+    </div>
+
+    <div class="step" data-step>
+      <div class="step__rail"><button class="tick" aria-pressed="false" aria-label="Mark step 18 done"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="step__n">18</span></div>
+      <div>
+        <h3>Confirm Ahrefs Web Analytics is receiving</h3>
+        <p class="step__body">The tag is already on every page. Check your Ahrefs dashboard shows the visit. It is cookie-free, which is exactly why this site needs no consent banner — <strong>adding GA4 or Clarity would set cookies and change that.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="done-note">
+    <h2>After launch</h2>
+    <p><strong>To change anything:</strong> edit, commit, push. Vercel rebuilds and redeploys on its own. Run <code class="mono">npm run check</code> first — it renders every page in a real browser and fails on console errors, broken links, missing meta, CSP violations and a broken lead API.</p>
+    <p><strong>Quarterly:</strong> re-verify the competitor figures in <code class="mono">src/data/compare.mjs</code> and bump <code class="mono">verifiedOn</code>. A comparison table with stale data discredits every other claim on the site.</p>
+    <p><strong>Every month or so:</strong> post an update on the Company page. It is the cheapest signal that the company is alive, and it is the page a cautious buyer checks.</p>
+    <p><strong>Within 36 months:</strong> delete old leads. The privacy policy promises it.</p>
+  </section>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+    var KEY = 'aerom-deploy-progress';
+    var steps = Array.prototype.slice.call(document.querySelectorAll('[data-step]'));
+    var fill = document.getElementById('fill');
+    var count = document.getElementById('count');
+
+    function read() {
+      try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+    }
+    function write(state) {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
+    }
+    function paint() {
+      var done = steps.filter(function (s) { return s.classList.contains('is-done'); }).length;
+      count.textContent = done + ' / ' + steps.length;
+      fill.style.width = (done / steps.length * 100) + '%';
+    }
+
+    var state = read();
+    steps.forEach(function (step, i) {
+      var tick = step.querySelector('.tick');
+      if (state[i]) { step.classList.add('is-done'); tick.setAttribute('aria-pressed', 'true'); }
+      tick.addEventListener('click', function () {
+        var on = !step.classList.contains('is-done');
+        step.classList.toggle('is-done', on);
+        tick.setAttribute('aria-pressed', on ? 'true' : 'false');
+        state[i] = on;
+        write(state);
+        paint();
+      });
+    });
+    paint();
+
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var pre = btn.parentElement.querySelector('pre');
+        var text = pre.innerText.split('\n').filter(function (l) {
+          return l.trim() && l.trim().charAt(0) !== '#';
+        }).join('\n');
+        try {
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = 'copied';
+            setTimeout(function () { btn.textContent = 'copy'; }, 1400);
+          });
+        } catch (e) {
+          btn.textContent = 'select manually';
+          setTimeout(function () { btn.textContent = 'copy'; }, 1800);
+        }
+      });
+    });
+  })();
+</script>

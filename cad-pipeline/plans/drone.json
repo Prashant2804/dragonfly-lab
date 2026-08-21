@@ -1,0 +1,6 @@
+{"bands":[
+ {"from":-500,"to":-45,"name":"drone_airframe","material":"drone"},
+ {"from":-45,"to":45,"maxRadial":70,"name":"aerom_module","material":"gateway"},
+ {"from":-45,"to":45,"name":"drone_body","material":"drone"},
+ {"from":45,"to":500,"name":"drone_props","material":"prop"}
+]}
