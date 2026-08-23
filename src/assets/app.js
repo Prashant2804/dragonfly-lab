@@ -33,15 +33,56 @@
   var hdr = document.querySelector('[data-header]');
   var burger = document.querySelector('[data-burger]');
   if (hdr && burger) {
+    function setMenu(open) {
+      hdr.setAttribute('data-menu', open ? 'open' : 'closed');
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      burger.textContent = open ? 'Close' : 'Menu';
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+
     burger.addEventListener('click', function () {
-      var open = hdr.getAttribute('data-menu') === 'open';
-      hdr.setAttribute('data-menu', open ? 'closed' : 'open');
-      burger.setAttribute('aria-expanded', open ? 'false' : 'true');
-      burger.textContent = open ? 'Menu' : 'Close';
-      document.body.style.overflow = open ? '' : 'hidden';
+      setMenu(hdr.getAttribute('data-menu') !== 'open');
+    });
+
+    hdr.querySelectorAll('.nav a').forEach(function (a) {
+      a.addEventListener('click', function () { setMenu(false); });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && hdr.getAttribute('data-menu') === 'open') setMenu(false);
+    });
+
+    matchMedia('(min-width:781px)').addEventListener('change', function (e) {
+      if (e.matches && hdr.getAttribute('data-menu') === 'open') setMenu(false);
     });
   }
 
+
+  /* ---------------- spec tabs ---------------- */
+  document.querySelectorAll('[data-spec-tabs]').forEach(function (group) {
+    var tabs = Array.prototype.slice.call(group.querySelectorAll('[role="tab"]'));
+    var panels = group.querySelectorAll('[data-spec-panel]');
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach(function (p) {
+        p.hidden = p.id !== tab.getAttribute('aria-controls');
+      });
+      tab.focus();
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        select(next);
+      });
+    });
+  });
 
   /* ---------------- funnel instrumentation ---------------- */
   // One helper so every funnel event goes to whatever analytics is configured

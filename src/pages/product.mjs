@@ -1,6 +1,7 @@
 import { esc } from '../templates/layout.mjs';
-import { crumb, breadcrumbSchema, faqBlock, faqSchema, ctaBand, specList, cards } from '../templates/blocks.mjs';
+import { crumb, breadcrumbSchema, faqBlock, faqSchema, ctaBand, specTabs, cards } from '../templates/blocks.mjs';
 import { site } from '../data/site.mjs';
+import { specs } from '../data/specs.mjs';
 import { buyingBlock, buyingFaqs } from '../templates/blocks.mjs';
 
 const faqs = [
@@ -13,7 +14,7 @@ const faqs = [
 
 const HOTSPOTS = [
   { id: 'antenna',  part: 'antenna',     title: 'GNSS antenna',        text: 'Sealed cylindrical radome over the antenna element. Its phase-centre offset is what the centimetre-level claim ultimately rests on, so it is characterised and stored in software rather than assumed.' },
-  { id: 'pi',       part: 'gateway',             title: 'Gateway enclosure',   text: 'Raspberry Pi Zero 2 W and the u-blox ZED-X20P receiver, with a finned heatsink shell. Reads the receiver, streams telemetry to the field app, relays RTCM corrections.' },
+  { id: 'pi',       part: 'gateway',             title: 'Gateway enclosure',   text: 'Raspberry Pi Zero 2 W and a u-blox GNSS receiver, with a finned heatsink shell. Reads the receiver, streams telemetry to the field app, relays RTCM corrections.' },
   { id: 'battery',  part: 'battery_module', title: 'Swappable battery',   text: 'Its own module with a release ring and a four-segment charge indicator. Change packs mid-shift instead of losing the afternoon.' },
   { id: 'arp',      part: 'pole_collars',        title: 'ARP datum marker',    text: 'The antenna reference point, physically marked at the top of the pole. Antenna height is measured to a real datum — the single most common source of a whole survey being quietly wrong.' },
   { id: 'pole',     part: 'pole_mid',               title: 'Telescoping pole',    text: 'Segments with cam-lock collars, collapsing to roughly a quarter of the extended length. Detented hard stops at known heights are in development, because survey repeatability needs the extended height to be a known value.' },
@@ -69,18 +70,7 @@ ${crumb(trail)}
     <h2>Aerom Rover</h2>
     <p>The unit that walks the site. Two metres extended, collapsing for transport, with the battery as its own swappable module.</p>
   </div>
-  ${specList([
-    ['Receiver', 'u-blox ZED-X20P, all-band multi-constellation'],
-    ['Demonstrated RTK', '~1 cm horizontal, ~1 cm vertical, carrier FIXED'],
-    ['Gateway', 'Raspberry Pi Zero 2 W, serial to receiver, WebSocket telemetry'],
-    ['Extended height', '2.00 m to the top of the antenna'],
-    ['Pole', 'Telescoping segments with cam-lock collars'],
-    ['Antenna reference', 'Marked ARP datum at the pole top'],
-    ['Power', 'Swappable battery module, 4-segment charge indicator'],
-    ['Phone mount', 'Flat cradle, screen facing the operator, clear of the collars'],
-    ['Corrections', 'NTRIP client and caster, RTCM3 in and out'],
-    ['Environmental rating', 'Not yet certified — production build'],
-  ])}
+  ${specTabs(specs.rover, 'rover')}
 </div></section>
 
 <section class="section"><div class="wrap">
@@ -89,17 +79,16 @@ ${crumb(trail)}
     <h2>Aerom Base</h2>
     <p>Set once, feed the whole crew. The same gateway and battery modules as the rover, on a survey tripod with a tribrach.</p>
   </div>
-  ${specList([
-    ['Receiver', 'u-blox ZED-X20P, all-band multi-constellation'],
-    ['Antenna', 'Ground-plane antenna under a sealed radome'],
-    ['Mount', 'Survey tripod with levelling tribrach and centring plate'],
-    ['Height', '1.44 m at working extension'],
-    ['Setup', 'Over a known point, or averaged in fix'],
-    ['Corrections out', 'RTCM3 over NTRIP, serial or Wi-Fi'],
-    ['Raw logging', 'Full-session raw observations for PPK'],
-    ['Rovers supported', 'Multiple rovers from one base'],
-    ['Power', 'Same swappable battery module as the rover'],
-  ])}
+  ${specTabs(specs.base, 'base')}
+</div></section>
+
+<section class="section section--alt"><div class="wrap">
+  <div class="section-head">
+    <p class="eyebrow">Software</p>
+    <h2>The field app and the desktop companion</h2>
+    <p>Aerom Capture collects in the field; Aerom Studio post-processes back at the office. Same data, same conventions, no manual reformatting between them.</p>
+  </div>
+  ${specTabs(specs.software, 'software')}
 </div></section>
 
 <section class="section section--alt"><div class="wrap">
@@ -125,7 +114,7 @@ ${ctaBand({ heading: 'Want to hold one?', body: 'Aerom is in its pilot programme
   return {
     url: '/product/',
     title: 'Aerom RTK GNSS Rover & Base Station — Specifications',
-    description: 'Explore the Aerom rover and base station in 3D. u-blox ZED-X20P receiver, swappable battery, marked ARP datum, 2 m telescoping pole. Full specifications.',
+    description: 'Explore the Aerom rover and base station in 3D. u-blox GNSS receiver, swappable battery, marked ARP datum, 2 m telescoping pole. Full specifications.',
     body,
     schema: [
       breadcrumbSchema(trail),
@@ -136,7 +125,7 @@ ${ctaBand({ heading: 'Want to hold one?', body: 'Aerom is in its pilot programme
         name: 'Aerom RTK GNSS System',
         brand: { '@type': 'Brand', name: 'Aerom' },
         manufacturer: { '@id': site.domain + '/#org' },
-        description: 'Survey-grade RTK GNSS rover and base station built in India, based on the u-blox ZED-X20P receiver.',
+        description: 'Survey-grade RTK GNSS rover and base station built in India, based on a u-blox GNSS receiver.',
         url: site.domain + '/product/',
         category: 'GNSS survey equipment',
       },

@@ -2,7 +2,7 @@ import { esc } from '../templates/layout.mjs';
 import { router, proofBlock, compareTable, faqBlock, faqSchema, ctaBand, cards } from '../templates/blocks.mjs';
 
 const faqs = [
-  { q: 'What exactly is Aerom?', a: 'A complete survey-grade RTK GNSS system: a rover, a base station, an Android field app called Aerom Capture, and a desktop post-processing app called Aerom Studio. It is built around the u-blox ZED-X20P receiver and designed, assembled and supported in India.' },
+  { q: 'What exactly is Aerom?', a: 'A complete survey-grade RTK GNSS system: a rover, a base station, an Android field app called Aerom Capture, and a desktop post-processing app called Aerom Studio. It is built around the u-blox GNSS receiver and designed, assembled and supported in India.' },
   { q: 'How accurate is it?', a: 'We have demonstrated approximately 1 cm horizontal and 1 cm vertical RTK on our own hardware, with 12 satellites and a fixed carrier solution. That is the same accuracy class as receivers costing far more — across this market published RTK accuracy sits around 7–8 mm + 1 ppm, and we do not claim to beat it. It is a demonstrated result under good sky view, not an all-conditions specification.' },
   { q: 'What does it cost?', a: 'We do not publish the price, because it is still moving as we finalise the production build and because the right configuration depends on whether you need a rover, a base, or both. Request the price sheet and we will send current figures the same working day.' },
   { q: 'Can I buy one today?', a: 'Not yet. Aerom is in its pilot programme — we are placing units with surveyors, drone operators and institutions who will use them on real jobs and tell us what breaks. If that sounds like you, that is exactly who we want to hear from.' },
@@ -30,7 +30,7 @@ export default function home() {
   </div>
   <div class="trust">
     <span><span class="dot"></span><b>1 cm RTK FIX</b> demonstrated on our own hardware</span>
-    <span><b>u-blox ZED-X20P</b> all-band receiver</span>
+    <span><b>u-blox GNSS</b> all-band receiver</span>
     <span><b>Designed &amp; assembled in India</b></span>
     <span><b>NavIC</b> on the roadmap</span>
   </div>

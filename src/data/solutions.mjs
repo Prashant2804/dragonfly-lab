@@ -38,7 +38,7 @@ export const solutions = [
       { h: 'One base, several rovers', p: 'Share corrections across a crew instead of buying receivers each.' },
     ],
     specs: [
-      ['Receiver', 'u-blox ZED-X20P, all-band multi-constellation'],
+      ['Receiver', 'u-blox GNSS receiver, all-band multi-constellation'],
       ['Demonstrated RTK', '~1 cm horizontal on our own hardware'],
       ['Corrections out', 'RTCM3 over NTRIP, serial or Wi-Fi'],
       ['Raw logging', 'For PPK post-processing in Aerom Studio'],
@@ -89,7 +89,7 @@ export const solutions = [
       { h: 'Photos against points', p: 'Attach site photos to the point record for defensible evidence.' },
     ],
     specs: [
-      ['Receiver', 'u-blox ZED-X20P, all-band multi-constellation'],
+      ['Receiver', 'u-blox GNSS receiver, all-band multi-constellation'],
       ['Demonstrated RTK', '~1 cm horizontal, ~1 cm vertical on our own hardware'],
       ['Corrections', 'NTRIP client, own base, or RTCM3 in/out'],
       ['Pole', 'Telescoping, ARP datum marker at a known height'],
@@ -140,7 +140,7 @@ export const solutions = [
       { h: 'Direct support in India', p: 'Site is down, someone answers — same country, same working day.' },
     ],
     specs: [
-      ['Receiver', 'u-blox ZED-X20P, all-band multi-constellation'],
+      ['Receiver', 'u-blox GNSS receiver, all-band multi-constellation'],
       ['Demonstrated RTK', '~1 cm horizontal on our own hardware'],
       ['Base', 'Tripod-mounted, feeds multiple rovers over NTRIP'],
       ['Power', 'Swappable battery module, hot-swap in the field'],
@@ -190,7 +190,7 @@ export const solutions = [
       { h: 'Government deliverable formats', p: 'Outputs shaped to what departments actually accept.' },
     ],
     specs: [
-      ['Receiver', 'u-blox ZED-X20P, all-band multi-constellation'],
+      ['Receiver', 'u-blox GNSS receiver, all-band multi-constellation'],
       ['Demonstrated RTK', '~1 cm horizontal, ~1 cm vertical on our own hardware'],
       ['Manufacture', 'Designed and assembled in India'],
       ['NavIC', 'On the roadmap'],

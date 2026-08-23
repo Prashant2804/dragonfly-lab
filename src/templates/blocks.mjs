@@ -191,6 +191,28 @@ export const numbered = (items) => `<ol class="numbered">${items.map(i =>
 export const specList = (rows) => `<dl class="specs">${rows.map(([k, v]) =>
   `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
 
+const LABELS = { performance: 'Performance', connectivity: 'Connectivity', physical: 'Physical',
+  capture: 'Aerom Capture', studio: 'Aerom Studio' };
+
+/* Tabbed spec panels — one tablist + one panel per group, each panel reusing
+   specList() so the row markup/CSS is never duplicated. Tab switching is
+   handled by app.js via [data-spec-tabs]; click/tap works with JS disabled
+   too, since every panel is present in the DOM (just visually stacked). */
+export function specTabs(groups, idPrefix = 'st') {
+  const keys = Object.keys(groups);
+  const tabs = keys.map((k, i) => `<button type="button" role="tab" id="${idPrefix}-tab-${k}"
+    aria-selected="${i === 0 ? 'true' : 'false'}" aria-controls="${idPrefix}-panel-${k}"
+    tabindex="${i === 0 ? '0' : '-1'}" data-spec-tab="${k}">${esc(LABELS[k] || k)}</button>`).join('');
+  const panels = keys.map((k, i) => `<div role="tabpanel" id="${idPrefix}-panel-${k}"
+    aria-labelledby="${idPrefix}-tab-${k}" data-spec-panel="${k}"${i === 0 ? '' : ' hidden'}>
+    ${specList(groups[k])}
+  </div>`).join('');
+  return `<div class="spec-tabs" data-spec-tabs>
+    <div class="spec-tabs__list" role="tablist">${tabs}</div>
+    <div class="spec-tabs__panels">${panels}</div>
+  </div>`;
+}
+
 
 /* ---------------- buying, support and logistics ----------------
    The four questions a procurement buyer asks before accuracy:
