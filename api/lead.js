@@ -106,12 +106,41 @@ async function googleAccessToken() {
   return (await res.json()).access_token;
 }
 
+/**
+ * Accept either a bare spreadsheet ID or a pasted Google Sheets URL.
+ *
+ * Setting this up means copying a value out of the browser, and the thing that is
+ * actually on the clipboard is usually the whole URL:
+ *   https://docs.google.com/spreadsheets/d/<ID>/edit?gid=0#gid=0
+ * Feeding that to the API produces `404 Requested entity was not found` — which
+ * reads like "the sheet is missing" and sends you looking in the wrong place.
+ * Pull the ID out instead of failing on a mistake that takes one regex to absorb.
+ */
+function normaliseSheetId(raw) {
+  const v = String(raw || '').trim();
+  if (!v) return '';
+  const m = v.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) return m[1];
+  return v.replace(/^\/+|\/+$/g, '');
+}
+
 async function appendToSheet(lead) {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) return { skipped: true };
+  const sheetId = normaliseSheetId(process.env.GOOGLE_SHEET_ID);
+  if (!sheetId) {
+    console.warn('[lead] sheet skipped: GOOGLE_SHEET_ID is not set in this environment');
+    return { skipped: true };
+  }
 
   const token = await googleAccessToken();
-  if (!token) return { skipped: true };
+  if (!token) {
+    // Reached when the service-account email or private key is missing, or the
+    // key is malformed. Say which, because the alternative is a silent no-op.
+    console.warn('[lead] sheet skipped: no Google access token —',
+      !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ? 'GOOGLE_SERVICE_ACCOUNT_EMAIL is unset'
+        : !process.env.GOOGLE_PRIVATE_KEY ? 'GOOGLE_PRIVATE_KEY is unset'
+          : 'GOOGLE_PRIVATE_KEY is set but did not produce a token (check the full PEM block and the \\n escapes)');
+    return { skipped: true };
+  }
 
   const tab = process.env.GOOGLE_SHEET_TAB || 'Leads';
   const row = [
@@ -129,7 +158,18 @@ async function appendToSheet(lead) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ values: [row] }),
   });
-  if (!res.ok) throw new Error(`Sheets ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    const body = (await res.text()).slice(0, 300);
+    // Translate the two API errors that actually happen in setup into the action
+    // that fixes them, so the log line is the answer rather than the start of a hunt.
+    const hint =
+      res.status === 404
+        ? ` — the service account cannot see a spreadsheet with id "${sheetId}". Either GOOGLE_SHEET_ID is wrong, or the sheet has not been shared with ${process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || 'the service account'} as Editor (Google returns 404, not 403, for a file the caller has no access to at all).`
+        : res.status === 400
+          ? ` — check that a tab named "${tab}" exists in the spreadsheet (GOOGLE_SHEET_TAB is case-sensitive).`
+          : '';
+    throw new Error(`Sheets ${res.status}: ${body}${hint}`);
+  }
   return { ok: true };
 }
 
@@ -168,7 +208,23 @@ async function notifyByEmail(lead) {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.NOTIFY_EMAIL;
   const from = process.env.NOTIFY_FROM;
-  if (!apiKey || !to || !from) return { skipped: true };
+  if (!apiKey || !to || !from) {
+    console.warn('[lead] email skipped: missing',
+      [!apiKey && 'RESEND_API_KEY', !to && 'NOTIFY_EMAIL', !from && 'NOTIFY_FROM'].filter(Boolean).join(', '));
+    return { skipped: true };
+  }
+
+  // Resend will only send FROM a domain you have verified. A gmail.com (or any
+  // other free-provider) sender is rejected 403 no matter how valid the API key
+  // is — you cannot verify a domain you do not control. Fail early and say so.
+  const fromDomain = (from.match(/@([^>\s]+)/) || [])[1] || '';
+  if (/^(gmail|googlemail|yahoo|outlook|hotmail|live|icloud|proton(mail)?)\./.test(`${fromDomain}.`)) {
+    throw new Error(
+      `Resend will not send from ${fromDomain}: NOTIFY_FROM must be an address at a domain verified in Resend ` +
+      `(e.g. leads@dragonflylab.in after verifying dragonflylab.in at https://resend.com/domains). ` +
+      `NOTIFY_EMAIL — where the notification is delivered — can stay a Gmail address.`
+    );
+  }
 
   const label = lead.intent === 'price_sheet' ? 'PRICE SHEET' : 'DEMO';
   const rows = [

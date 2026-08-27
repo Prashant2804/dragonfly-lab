@@ -176,6 +176,78 @@ async function run() {
   if (live) pass('3D viewer initialised and swapped in'); else fail('/product/', '3D viewer never became live');
   await p.close();
 
+  /* ------------------------- mobile menu ------------------------------
+   * This regressed once and nothing caught it: the nav panel collapsed to a
+   * ~36px sliver because .hdr's backdrop-filter makes it the containing block
+   * for `position: fixed` descendants, so the panel's `inset` resolved against
+   * the 62px header instead of the viewport. Visually the menu button "did
+   * nothing" while the scroll lock still applied — the page looked frozen.
+   *
+   * Every assertion below is a symptom of that bug or of the follow-on fixes.
+   * If one fails, read src/assets/styles.css's @media (max-width: 780px) block
+   * before changing this test.
+   * ------------------------------------------------------------------- */
+  const m = await browser.newPage({
+    viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true,
+  });
+  await m.goto(base + '/', { waitUntil: 'networkidle' });
+
+  const burger = m.locator('[data-burger]');
+  if (await burger.isVisible()) pass('mobile: burger visible at 390px');
+  else fail('/', 'mobile: burger not visible at 390px');
+
+  await burger.tap();
+  await m.waitForTimeout(350);
+
+  const box = await m.locator('.hdr .nav').boundingBox();
+  // The bug produced height ~36. Anything under half the viewport means the
+  // panel is collapsing again rather than covering the screen.
+  if (box && box.height > 500 && box.width > 300) {
+    pass(`mobile: open menu covers the screen (${Math.round(box.width)}x${Math.round(box.height)})`);
+  } else {
+    fail('/', `mobile: open menu is ${box ? `${Math.round(box.width)}x${Math.round(box.height)}` : 'not rendered'} — expected to fill the viewport below the header`);
+  }
+
+  const tap = await m.locator('.hdr .nav a').first().boundingBox();
+  if (tap && tap.height >= 50) pass(`mobile: nav tap targets ${Math.round(tap.height)}px`);
+  else fail('/', `mobile: nav tap target only ${Math.round(tap?.height || 0)}px (want >= 50)`);
+
+  if (await m.evaluate(() => document.body.style.overflow) === 'hidden') pass('mobile: scroll locked while menu open');
+  else fail('/', 'mobile: scroll not locked while menu open');
+
+  // Tapping a link must both navigate and release the lock. Leaving
+  // overflow:hidden behind is what made the page feel permanently frozen.
+  await m.locator('.hdr .nav a').first().tap();
+  await m.waitForTimeout(700);
+  if (await m.evaluate(() => document.body.style.overflow) !== 'hidden') pass('mobile: scroll lock released after tapping a link');
+  else fail('/', 'mobile: scroll lock survived a nav link tap');
+
+  await m.locator('[data-burger]').tap();
+  await m.waitForTimeout(250);
+  await m.keyboard.press('Escape');
+  await m.waitForTimeout(250);
+  if (await m.evaluate(() => document.querySelector('[data-header]')?.getAttribute('data-menu')) === 'closed') {
+    pass('mobile: Escape closes the menu');
+  } else {
+    fail('/', 'mobile: Escape did not close the menu');
+  }
+  await m.close();
+
+  /* --------------------- cache-busting of assets ----------------------
+   * vercel.json serves CSS/JS `immutable` for a year. That is only safe while
+   * the filename carries a content hash — otherwise a shipped fix never reaches
+   * a returning visitor's phone, which is exactly how the mobile-menu fix above
+   * stayed invisible in production after it was deployed.
+   * -------------------------------------------------------------------- */
+  const homeHtml = await readFile(path.join(root, 'public/index.html'), 'utf8');
+  const hashed = /(?:href|src)="\/(?:styles|app)\.[a-f0-9]{10}\.(?:css|js)"/g;
+  const bare = /(?:href|src)="\/(?:styles\.css|app\.js|viewer\.js)"/;
+  if ((homeHtml.match(hashed) || []).length >= 2 && !bare.test(homeHtml)) {
+    pass('assets are content-hashed (immutable caching is safe)');
+  } else {
+    fail('/', 'assets are NOT content-hashed — immutable caching in vercel.json will pin stale CSS/JS on returning visitors for a year');
+  }
+
   await browser.close();
   server.close();
 

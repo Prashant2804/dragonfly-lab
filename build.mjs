@@ -133,6 +133,58 @@ function withCsp(html) {
     `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
 }
 
+/**
+ * Content-hashed asset filenames.
+ *
+ * WHY THIS EXISTS — do not remove it, and do not go back to fixed asset URLs.
+ *
+ * vercel.json serves *.css / *.js with `Cache-Control: max-age=31536000, immutable`.
+ * `immutable` is a promise to the browser that the bytes at this URL will NEVER
+ * change, so the browser is entitled to serve its cached copy for a year without
+ * revalidating at all — no conditional request, no ETag check. On mobile Chrome
+ * and Safari a normal reload does not clear it either.
+ *
+ * While the assets were served from fixed URLs (/styles.css, /app.js) that promise
+ * was false: every deploy changed the bytes behind the same URL. That produced a
+ * class of bug invisible to the developer and permanent for the visitor — most
+ * recently the mobile menu, whose CSS fix shipped to production but never reached
+ * any phone that had loaded the site before the fix landed.
+ *
+ * The fix is the standard one: put a hash of the content in the filename, so new
+ * content is always a new URL. The HTML referencing it is served
+ * `max-age=0, must-revalidate`, so a returning visitor always re-fetches the HTML,
+ * sees the new asset URL, and downloads the new asset. `immutable` becomes true
+ * instead of a lie, and a stale asset can no longer outlive a deploy.
+ *
+ * If you add another long-lived static asset, hash it here too.
+ */
+const HASHED_ASSETS = ['styles.css', 'app.js', 'viewer.js'];
+
+async function writeHashedAssets() {
+  const map = new Map();
+  for (const name of HASHED_ASSETS) {
+    const buf = await readFile(path.join(root, 'src/assets', name));
+    const hash = createHash('sha256').update(buf).digest('hex').slice(0, 10);
+    const dot = name.lastIndexOf('.');
+    const hashed = `${name.slice(0, dot)}.${hash}${name.slice(dot)}`;
+    await writeFile(path.join(OUT, hashed), buf);
+    map.set(`/${name}`, `/${hashed}`);
+  }
+  return map;
+}
+
+/**
+ * Rewrite the stable asset paths the templates author against (/styles.css,
+ * /app.js, /viewer.js) to their hashed equivalents. Templates stay readable and
+ * the build owns cache-busting. Matches only quoted attribute values, so prose
+ * or code samples mentioning the filename are untouched.
+ */
+function rewriteAssets(html, map) {
+  let out = html;
+  for (const [from, to] of map) out = out.split(`"${from}"`).join(`"${to}"`);
+  return out;
+}
+
 function sitemap(urls) {
   const today = new Date().toISOString().slice(0, 10);
   const body = urls.map((u) => {
@@ -158,10 +210,8 @@ async function build() {
   await rm(OUT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
 
-  // static assets
-  await cp(path.join(root, 'src/assets/styles.css'), path.join(OUT, 'styles.css'));
-  await cp(path.join(root, 'src/assets/app.js'), path.join(OUT, 'app.js'));
-  await cp(path.join(root, 'src/assets/viewer.js'), path.join(OUT, 'viewer.js'));
+  // static assets — CSS/JS get content-hashed filenames, see writeHashedAssets()
+  const assetMap = await writeHashedAssets();
   if (existsSync(path.join(root, 'static'))) {
     await cp(path.join(root, 'static'), OUT, { recursive: true });
   }
@@ -170,7 +220,7 @@ async function build() {
 
   const indexed = [];
   for (const p of pages) {
-    const html = withCsp(layout(p));
+    const html = withCsp(rewriteAssets(layout(p), assetMap));
     const file = p.outFile || path.join(p.url.replace(/^\/|\/$/g, ''), 'index.html');
     const dest = path.join(OUT, file);
     await mkdir(path.dirname(dest), { recursive: true });

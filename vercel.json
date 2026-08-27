@@ -47,11 +47,22 @@
       ]
     },
     {
-      "source": "/(.*).(css|js|glb|png|jpg|jpeg|webp|svg|woff2)",
+      "_comment": "Content-hashed CSS/JS only (name.<10-hex>.css). These URLs never change content, so immutable is honest here. build.mjs writes the hash; see writeHashedAssets().",
+      "source": "/:name([a-zA-Z0-9_-]+).:hash([a-f0-9]{10}).:ext(css|js)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "_comment": "Un-hashed media. A day of caching plus a week of stale-while-revalidate keeps these fast, but a replaced model or image reaches returning visitors within a day instead of a year. Do NOT put immutable here unless the filename carries a content hash.",
+      "source": "/(.*).(glb|png|jpg|jpeg|webp|svg|woff2|avif|ico)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
         }
       ]
     },
